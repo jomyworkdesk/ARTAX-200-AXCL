@@ -104,7 +104,7 @@ namespace ARTAX200Control
         {
             Dictionary<string, string> env = ReadBackendEnv();
             string host = GetLocalIPv4Address();
-            string port = env.ContainsKey("PORT") ? env["PORT"] : "8200";
+            string port = env.ContainsKey("PORT") ? env["PORT"] : "1201";
 
             return "http://" + host + ":" + port + "/";
         }
