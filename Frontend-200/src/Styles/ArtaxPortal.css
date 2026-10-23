@@ -1,0 +1,105 @@
+.artax-portal-page {
+  min-height: 100vh;
+  background: var(--bg-main);
+  color: var(--text-primary);
+}
+
+.artax-portal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 18px 32px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.artax-portal-brand {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-width: 0;
+}
+
+.artax-portal-logo {
+  width: 140px;
+  height: auto;
+  flex-shrink: 0;
+}
+
+.artax-portal-kicker {
+  margin-bottom: 4px;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.artax-portal-brand h1 {
+  color: var(--text-primary);
+  font-size: 1.45rem;
+  font-weight: 700;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.artax-portal-signout {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  font-weight: 600;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.artax-portal-signout:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+  border-color: var(--primary);
+}
+
+.artax-portal-main {
+  padding: 32px;
+}
+
+.artax-portal-panel {
+  padding: 28px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.artax-portal-panel h2 {
+  color: var(--text-primary);
+  font-size: 1.4rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+@media (max-width: 640px) {
+  .artax-portal-header {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 16px;
+  }
+
+  .artax-portal-logo {
+    width: 120px;
+  }
+
+  .artax-portal-signout {
+    width: 100%;
+  }
+
+  .artax-portal-main {
+    padding: 16px;
+  }
+}

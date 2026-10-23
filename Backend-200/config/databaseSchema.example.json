@@ -1,0 +1,16 @@
+{
+  "tables": {
+    "E_Invoicing": "E_Invoicing",
+    "E_InvoiceQueue": "E_InvoiceQueue",
+    "InvNum": "InvNum",
+    "_btblInvoiceLines": "_btblInvoiceLines",
+    "Client": "Client"
+  },
+  "columns": {
+    "invoice_no": "invoice_no",
+    "invoice_issue_date": "invoice_issue_date",
+    "InvNumber": "InvNumber",
+    "DocType": "DocType",
+    "QueueID": "QueueID"
+  }
+}

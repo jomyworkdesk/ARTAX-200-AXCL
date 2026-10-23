@@ -1,0 +1,54 @@
+{
+  "name": "einvoice",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "bin": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "build": "npm run build:win",
+    "build:win": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-win.ps1",
+    "build:all": "npm run build:win",
+    "db:ping": "node scripts/dbPing.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "pkg": {
+    "scripts": [
+      "app.js",
+      "config/**/*.js",
+      "controllers/**/*.js",
+      "CronJobs/**/*.js",
+      "services/**/*.js",
+      "repositories/**/*.js",
+      "routes/**/*.js",
+      "middleware/**/*.js",
+      "utils/**/*.js"
+    ],
+    "assets": [
+      ".env",
+      "config/**/*",
+      "Artax_ui/**/*",
+      "node_modules/bcrypt/prebuilds/win32-x64/bcrypt.node"
+    ],
+    "outputPath": "../dist"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.1",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mssql": "^12.2.1",
+    "node-cron": "^4.2.1",
+    "nodemailer": "^6.10.1",
+    "xmlbuilder2": "^4.0.3"
+  },
+  "devDependencies": {
+    "pkg": "^5.8.1",
+    "rcedit": "^4.0.1"
+  }
+}

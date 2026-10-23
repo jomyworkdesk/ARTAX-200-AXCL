@@ -1,0 +1,228 @@
+.seller-page {
+  padding: 1rem 0;
+  width: 100%;
+}
+
+.seller-header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.seller-header-titles h1 {
+  font-size: 1.5rem;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.btn-edit {
+  background-color: transparent;
+  color: var(--primary);
+  border: 1px solid var(--primary);
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-edit:hover {
+  background-color: var(--bg-surface-hover);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.seller-subtitle {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.seller-form {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.form-section {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.section-title {
+  font-size: 1.1rem;
+  color: var(--text-primary);
+  margin-bottom: 20px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--bg-surface-hover);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.scheme-identifiers-row {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-group.half-width {
+  grid-column: span 2;
+}
+
+.form-group.divider {
+  height: 1px;
+  background-color: var(--border-color);
+  margin: 12px 0;
+}
+
+.form-group label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.form-group label .required {
+  color: var(--error);
+  margin-left: 4px;
+}
+
+.form-input {
+  min-height: 40px;
+  padding: 0 12px;
+  font-size: 0.9rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+.form-input::placeholder {
+  color: var(--text-muted);
+}
+
+.form-input:disabled {
+  background-color: var(--bg-background);
+  color: var(--text-secondary);
+  border-color: transparent;
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+.seller-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  padding-top: 16px;
+  margin-bottom: 40px;
+}
+
+.btn-cancel {
+  background-color: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-cancel:hover {
+  background-color: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+
+.btn-update {
+  background-color: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 32px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  box-shadow: 0 4px 12px rgba(var(--primary-rgb, 0,0,0), 0.15);
+}
+
+.btn-update:hover {
+  background-color: var(--primary-hover, #0056b3);
+}
+
+.btn-update:active {
+  transform: translateY(1px);
+}
+
+.btn-update:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Animations */
+.slide-down {
+  animation: slideDown 0.3s ease-out forwards;
+  transform-origin: top;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .seller-page {
+    padding: 16px;
+  }
+  
+  .form-section {
+    padding: 16px;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-group.half-width {
+    grid-column: 1 / -1;
+  }
+
+  .scheme-identifiers-row {
+    grid-template-columns: 1fr;
+  }
+}

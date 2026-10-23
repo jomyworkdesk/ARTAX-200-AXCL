@@ -1,0 +1,148 @@
+/* Snackbar Container */
+.snackbar-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none;
+  max-width: 400px;
+}
+
+@media (max-width: 640px) {
+  .snackbar-container {
+    left: 12px;
+    right: 12px;
+    max-width: none;
+  }
+}
+
+/* Individual Snackbar */
+.snackbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  animation: slideIn 0.3s ease-out;
+  pointer-events: auto;
+  border: 1px solid;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+}
+
+.snackbar.snackbar-exit {
+  animation: slideOut 0.3s ease-out;
+}
+
+/* Snackbar Types */
+.snackbar-success {
+  background-color: #f0fdf4;
+  color: #166534;
+  border-color: #86efac;
+}
+
+.snackbar-success .snackbar-icon {
+  color: #22c55e;
+}
+
+.snackbar-error {
+  background-color: #fef2f2;
+  color: #991b1b;
+  border-color: #fca5a5;
+}
+
+.snackbar-error .snackbar-icon {
+  color: #ef4444;
+}
+
+.snackbar-info {
+  background-color: #f0f9ff;
+  color: #0c2340;
+  border-color: #bae6fd;
+}
+
+.snackbar-info .snackbar-icon {
+  color: #0ea5e9;
+}
+
+.snackbar-warning {
+  background-color: #fffbeb;
+  color: #92400e;
+  border-color: #fde047;
+}
+
+.snackbar-warning .snackbar-icon {
+  color: #eab308;
+}
+
+/* Snackbar Content */
+.snackbar-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.snackbar-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.snackbar-message {
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+/* Close Button */
+.snackbar-close {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+  opacity: 0.7;
+}
+
+.snackbar-close:hover {
+  opacity: 1;
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.snackbar-close:active {
+  transform: scale(0.95);
+}

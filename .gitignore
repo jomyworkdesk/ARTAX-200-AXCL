@@ -1,0 +1,38 @@
+node_modules/
+.env
+.env.local
+.env.*.local
+*.log
+/dist/
+dist/
+build/
+
+dist/
+
+*.zip
+
+*.exe
+
+
+*.xml
+
+
+SELECT *
+FROM E_InboundRequestLog
+WHERE InstanceIdentifier IN (
+    SELECT InstanceIdentifier
+    FROM E_InboundRequestLog
+    WHERE InstanceIdentifier IS NOT NULL
+    GROUP BY InstanceIdentifier
+    HAVING COUNT(*) > 1
+)
+ORDER BY InstanceIdentifier;
+
+SELECT 
+    InstanceIdentifier,
+    COUNT(*) AS DuplicateCount
+FROM E_InboundRequestLog
+WHERE InstanceIdentifier IS NOT NULL
+GROUP BY InstanceIdentifier
+HAVING COUNT(*) > 1
+ORDER BY DuplicateCount DESC;

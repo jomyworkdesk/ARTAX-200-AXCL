@@ -1,0 +1,254 @@
+.configure-page {
+  --card-bg: var(--bg-surface);
+  --input-bg: var(--bg-surface);
+  --text-color: var(--text-primary);
+  --text-color-muted: var(--text-secondary);
+  --primary-color: var(--primary);
+  padding: 1rem 0;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+.configure-header {
+  margin-bottom: 1rem;
+}
+
+.configure-header h1 {
+  font-size: 1.5rem;
+  color: var(--text-color);
+  font-weight: 600;
+  margin: 0;
+}
+
+.configure-tables-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.configure-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+}
+
+.card-header {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.card-header h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-color);
+  margin: 0;
+}
+
+.card-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.card-actions button {
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.btn-edit {
+  background: #64748b;
+  color: white;
+}
+
+.btn-edit:hover {
+  background: #475569;
+}
+
+.btn-cancel {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+[data-theme='dark'] .btn-cancel {
+  background: #334155;
+  color: #cbd5e1;
+}
+
+.btn-cancel:hover {
+  background: #e2e8f0;
+}
+
+[data-theme='dark'] .btn-cancel:hover {
+  background: #475569;
+}
+
+.btn-save {
+  background: #10b981;
+  color: white;
+}
+
+.btn-save:hover {
+  background: #059669;
+}
+
+.toggle-row {
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--card-bg);
+}
+
+.toggle-btn {
+  margin-left: auto;
+}
+
+.toggle-row span {
+  font-weight: 500;
+  color: var(--text-color-muted);
+}
+
+.toggle-btn {
+  position: relative;
+  width: 48px;
+  height: 24px;
+  border-radius: 12px;
+  background-color: #cbd5e1;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: background-color 0.3s ease;
+}
+
+[data-theme='dark'] .toggle-btn {
+  background-color: #475569;
+}
+
+.toggle-btn.active {
+  background-color: #10b981;
+}
+
+.toggle-slider {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background-color: white;
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-btn.active .toggle-slider {
+  transform: translateX(24px);
+}
+
+.toggle-label {
+  min-width: 30px;
+  font-weight: 600 !important;
+  color: var(--text-color) !important;
+}
+
+.table-wrapper {
+  /* Height for exactly 6 records approx. Adjust based on row height */
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.mapping-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.mapping-table th {
+  position: sticky;
+  top: 0;
+  background: var(--bg-surface-hover);
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--text-color-muted);
+  border-bottom: 1px solid var(--border-color);
+  z-index: 1;
+}
+
+.mapping-table td {
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.85rem;
+  color: var(--text-color);
+  vertical-align: middle;
+}
+
+.mapping-table tr:last-child td {
+  border-bottom: none;
+}
+
+.mapping-table tr:hover td {
+  background: rgba(0, 0, 0, 0.01);
+}
+
+[data-theme='dark'] .mapping-table tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+[data-theme='dark'] .mapping-table th {
+  background: #273449;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.status-badge.mapped {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.status-badge.not-mapped {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.mapping-select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--input-bg);
+  color: var(--text-color);
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.mapping-select:focus {
+  border-color: var(--primary-color);
+}
+
+@media (max-width: 1024px) {
+  .configure-tables-container {
+    grid-template-columns: 1fr;
+  }
+}

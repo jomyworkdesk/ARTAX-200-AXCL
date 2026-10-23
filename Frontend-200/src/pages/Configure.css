@@ -1,0 +1,10 @@
+/* Remove the default top padding of the main layout container for Configure routes */
+.main-content > .container:has(.configure-wrapper) {
+  padding-top: 10px;
+}
+
+/* Also ensure no default padding-top on the individual pages if any */
+.configure-wrapper .master-page,
+.configure-wrapper .seller-page {
+  padding-top: 0; 
+}

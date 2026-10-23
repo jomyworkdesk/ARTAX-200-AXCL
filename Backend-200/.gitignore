@@ -1,0 +1,10 @@
+node_modules/
+.env
+.env.local
+.env.*.local
+*.log
+dist/
+build/
+Artax_ui/
+.pkg-cache/
+
