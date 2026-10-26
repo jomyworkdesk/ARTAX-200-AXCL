@@ -22,7 +22,7 @@ const getResponseLogs = async () =>
             CONVERT(VARCHAR(19), l.[createdAt], 120) AS createdAt
         FROM [e_invoice_response_log] l
         LEFT JOIN [E_WebLogin] w
-            ON TRY_CONVERT(NVARCHAR(100), w.[AgentId]) = l.[createdby]
+            ON CONVERT(NVARCHAR(100), w.[AgentId]) = l.[createdby]
         ORDER BY l.[Id] DESC
     `);
 
@@ -38,7 +38,7 @@ const getTokenLogs = async () =>
             CONVERT(VARCHAR(19), l.[createdAt], 120) AS createdAt
         FROM [e_invoicetokenlog] l
         LEFT JOIN [E_WebLogin] w
-            ON TRY_CONVERT(NVARCHAR(100), w.[AgentId]) = l.[createdby]
+            ON CONVERT(NVARCHAR(100), w.[AgentId]) = l.[createdby]
         ORDER BY l.[Id] DESC
     `);
 

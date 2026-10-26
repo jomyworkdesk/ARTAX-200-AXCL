@@ -1,4 +1,5 @@
 const db = require("../db");
+const { sqlInt } = require("../utils/sqlCompatibility");
 const SYNC_BATCH_SIZE = 2;
 const SPEC_IDENTIFIER = "urn:peppol:pint:billing-1@ae-1";
 const BUSINESS_PROCESS_TYPE = "urn:peppol:bis:billing";
@@ -316,15 +317,15 @@ const fetchInvoiceSourceRows = async (client = db, documents) => {
             ORDER BY PA.AutoIdx DESC
         ) CreditPostAR
         OUTER APPLY (
-            SELECT TRY_CONVERT(
-                int,
-                SUBSTRING(
+            SELECT SUBSTRING(
                     CreditPostAR.cAllocs,
                     CHARINDEX('I=', CreditPostAR.cAllocs) + 2,
                     CHARINDEX(';', CreditPostAR.cAllocs + ';', CHARINDEX('I=', CreditPostAR.cAllocs))
                         - CHARINDEX('I=', CreditPostAR.cAllocs) - 2
-                )
-            ) AS AllocatedPostARAutoIdx
+                ) AS PostARAutoIdxText
+        ) CreditAllocationText
+        OUTER APPLY (
+            SELECT ${sqlInt("CreditAllocationText.PostARAutoIdxText")} AS AllocatedPostARAutoIdx
         ) CreditAllocation
         LEFT JOIN PostAR AllocatedPostAR ON AllocatedPostAR.AutoIdx = CreditAllocation.AllocatedPostARAutoIdx
         LEFT JOIN InvNum AllocatedInv ON AllocatedInv.InvNumber = AllocatedPostAR.Reference

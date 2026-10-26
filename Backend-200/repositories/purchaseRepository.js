@@ -1,4 +1,5 @@
 const db = require("../db");
+const { sqlInt } = require("../utils/sqlCompatibility");
 
 const PURCHASE_TABLE = "E_Purchase";
 const IN_DOCUMENT_TABLE = "E_InvoiceinDocument";
@@ -30,13 +31,13 @@ const IN_DOCUMENT_APPLY = `
             FROM [${IN_DOCUMENT_TABLE}] d
             WHERE e.[inDocument] IS NOT NULL
               AND (
-                d.[ID] = TRY_CONVERT(int, e.[inDocument])
+                d.[ID] = ${sqlInt("e.[inDocument]")}
                 OR d.[EinvoiceID] = e.[ID]
                 OR d.[invoice_no] = e.[invoice_no]
               )
             ORDER BY
                 CASE
-                    WHEN d.[ID] = TRY_CONVERT(int, e.[inDocument]) THEN 0
+                    WHEN d.[ID] = ${sqlInt("e.[inDocument]")} THEN 0
                     WHEN d.[EinvoiceID] = e.[ID] THEN 1
                     ELSE 2
                 END,

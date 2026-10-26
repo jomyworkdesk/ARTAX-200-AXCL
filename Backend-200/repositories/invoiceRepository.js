@@ -1,4 +1,5 @@
 const db = require("../db");
+const { sqlInt } = require("../utils/sqlCompatibility");
 const INVOICE_DOC_TYPE = 4;
 const INVOICE_TABLE = "E_Invoicing";
 const OUT_DOCUMENT_TABLE = "E_InvoiceoutDocument";
@@ -75,7 +76,7 @@ const OUT_DOCUMENT_APPLY = `
             SELECT TOP (1) d.*
             FROM [${OUT_DOCUMENT_TABLE}] d
             WHERE e.[outDocument] IS NOT NULL
-              AND d.[ID] = TRY_CONVERT(int, e.[outDocument])
+              AND d.[ID] = ${sqlInt("e.[outDocument]")}
             ORDER BY d.[ID] DESC
         ) od`;
 
@@ -239,13 +240,13 @@ const getDashboardCounts = async (fromDate, toDate, docType = INVOICE_DOC_TYPE) 
     const result = await db.queryUnsafe(`
         SELECT
             COUNT(DISTINCT q.QueueID) AS total,
-            COUNT(DISTINCT CASE WHEN TRY_CONVERT(int, q.Status) = 1 AND ISNULL(q.IsInvoiced, 0) = 1 THEN q.QueueID END) AS pending,
-            COUNT(DISTINCT CASE WHEN TRY_CONVERT(int, q.Status) = 2 THEN q.QueueID END) AS sent,
-            COUNT(DISTINCT CASE WHEN TRY_CONVERT(int, q.Status) = 3 THEN q.QueueID END) AS success,
-            COUNT(DISTINCT CASE WHEN TRY_CONVERT(int, q.Status) = 3 THEN q.QueueID END) AS received,
+            COUNT(DISTINCT CASE WHEN ${sqlInt("q.Status")} = 1 AND ISNULL(q.IsInvoiced, 0) = 1 THEN q.QueueID END) AS pending,
+            COUNT(DISTINCT CASE WHEN ${sqlInt("q.Status")} = 2 THEN q.QueueID END) AS sent,
+            COUNT(DISTINCT CASE WHEN ${sqlInt("q.Status")} = 3 THEN q.QueueID END) AS success,
+            COUNT(DISTINCT CASE WHEN ${sqlInt("q.Status")} = 3 THEN q.QueueID END) AS received,
             COUNT(DISTINCT CASE WHEN ISNULL(q.IsInvoiced, 0) = 1 THEN q.QueueID END) AS invoiced,
-            COUNT(DISTINCT CASE WHEN TRY_CONVERT(int, q.Status) = 4 THEN q.QueueID END) AS failed,
-            COUNT(DISTINCT CASE WHEN TRY_CONVERT(int, q.Status) = 6 THEN q.QueueID END) AS error
+            COUNT(DISTINCT CASE WHEN ${sqlInt("q.Status")} = 4 THEN q.QueueID END) AS failed,
+            COUNT(DISTINCT CASE WHEN ${sqlInt("q.Status")} = 6 THEN q.QueueID END) AS error
         FROM E_InvoiceQueue q
         WHERE q.DocType = ${docType}
         ${dateFilter.replace('WHERE', 'AND')}
@@ -267,8 +268,8 @@ const getInvoicesByType = async (type, fromDate, toDate, docType = INVOICE_DOC_T
         };
         const statusCode = statusCodeMap[type];
         const statusCondition = type === "error"
-            ? "TRY_CONVERT(int, q.Status) = 6"
-            : `TRY_CONVERT(int, q.Status) = ${statusCode}`;
+            ? `${sqlInt("q.Status")} = 6`
+            : `${sqlInt("q.Status")} = ${statusCode}`;
 
         return db.queryUnsafe(`
             SELECT
@@ -347,7 +348,7 @@ ${OUTBOUND_TRANSACTION_RESPONSE_FIELDS}
             INNER JOIN E_InvoiceQueue q
                 ON e.invoice_no = q.InvNumber AND e.DocType = q.DocType
 ${OUTBOUND_TRANSACTION_JOIN}
-            WHERE TRY_CONVERT(int, q.Status) = 6
+            WHERE ${sqlInt("q.Status")} = 6
             AND e.DocType = ${docType} AND q.DocType = ${docType}
             ${dateFilter}
             GROUP BY e.invoice_no
@@ -377,7 +378,7 @@ ${OUTBOUND_TRANSACTION_JOIN}
         WHERE 1 = 1
         AND e.DocType = ${docType}
         AND (q.QueueID IS NULL OR q.DocType = ${docType})
-        AND (q.QueueID IS NULL OR ISNULL(TRY_CONVERT(int, q.Status), -1) <> 0)
+        AND (q.QueueID IS NULL OR ISNULL(${sqlInt("q.Status")}, -1) <> 0)
         ${dateFilter}
         GROUP BY e.invoice_no
         ORDER BY MAX(COALESCE(q.QueueID, 0)) DESC
@@ -397,7 +398,7 @@ const getFailedInvoiceErrors = async (fromDate, toDate) => {
         FROM E_InvoiceQueue EQ
         LEFT JOIN E_Invoicing E
             ON EQ.INVNUMBER = E.invoice_no
-        WHERE TRY_CONVERT(int, EQ.Status) IN (4)
+        WHERE ${sqlInt("EQ.Status")} IN (4)
         ${dateFilter}
         GROUP BY EQ.InvNumber
         ORDER BY MAX(EQ.InvDate) DESC, EQ.InvNumber DESC
@@ -418,7 +419,7 @@ const getArtaxInvoiceErrors = async (fromDate, toDate) => {
         FROM E_InvoiceQueue EQ
         LEFT JOIN E_Invoicing E
             ON EQ.INVNUMBER = E.invoice_no
-        WHERE TRY_CONVERT(int, EQ.Status) IN (6)
+        WHERE ${sqlInt("EQ.Status")} IN (6)
         ${dateFilter}
         GROUP BY EQ.InvNumber , EQ.AutoIndex
         ORDER BY MAX(EQ.InvDate) DESC, EQ.InvNumber DESC
@@ -578,12 +579,12 @@ const findInvoiceOutDocumentId = async (client, invoiceRow) => {
     const rows = await client.queryStatement(
         `SELECT TOP (1) [ID]
          FROM [${OUT_DOCUMENT_TABLE}]
-         WHERE [ID] = TRY_CONVERT(int, @p0)
+         WHERE [ID] = ${sqlInt("@p0")}
             OR [EinvoiceID] = @p1
             OR [invoice_no] = @p2
          ORDER BY
             CASE
-                WHEN [ID] = TRY_CONVERT(int, @p0) THEN 0
+                WHEN [ID] = ${sqlInt("@p0")} THEN 0
                 WHEN [EinvoiceID] = @p1 THEN 1
                 ELSE 2
             END,

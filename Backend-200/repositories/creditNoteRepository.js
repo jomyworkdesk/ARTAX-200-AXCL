@@ -1,4 +1,5 @@
 const db = require("../db");
+const { sqlInt } = require("../utils/sqlCompatibility");
 const CREDIT_NOTE_DOC_TYPE = 1;
 const INVOICE_TABLE = "E_Invoicing";
 const OUT_DOCUMENT_TABLE = "E_InvoiceoutDocument";
@@ -75,7 +76,7 @@ const OUT_DOCUMENT_APPLY = `
             SELECT TOP (1) d.*
             FROM [${OUT_DOCUMENT_TABLE}] d
             WHERE e.[outDocument] IS NOT NULL
-              AND d.[ID] = TRY_CONVERT(int, e.[outDocument])
+              AND d.[ID] = ${sqlInt("e.[outDocument]")}
             ORDER BY d.[ID] DESC
         ) od`;
 
@@ -169,12 +170,12 @@ const getDashboardCounts = async (fromDate, toDate) => {
     const result = await db.queryUnsafe(`
         SELECT
             COUNT(DISTINCT q.QueueID) AS total,
-            COUNT(DISTINCT CASE WHEN TRY_CONVERT(int, q.Status) = 1 AND ISNULL(q.IsInvoiced, 0) = 1 THEN q.QueueID END) AS pending,
-            COUNT(DISTINCT CASE WHEN TRY_CONVERT(int, q.Status) = 3 THEN q.QueueID END) AS success,
-            COUNT(DISTINCT CASE WHEN TRY_CONVERT(int, q.Status) = 3 THEN q.QueueID END) AS received,
+            COUNT(DISTINCT CASE WHEN ${sqlInt("q.Status")} = 1 AND ISNULL(q.IsInvoiced, 0) = 1 THEN q.QueueID END) AS pending,
+            COUNT(DISTINCT CASE WHEN ${sqlInt("q.Status")} = 3 THEN q.QueueID END) AS success,
+            COUNT(DISTINCT CASE WHEN ${sqlInt("q.Status")} = 3 THEN q.QueueID END) AS received,
             COUNT(DISTINCT CASE WHEN ISNULL(q.IsInvoiced, 0) = 1 THEN q.QueueID END) AS invoiced,
-            COUNT(DISTINCT CASE WHEN TRY_CONVERT(int, q.Status) = 4 THEN q.QueueID END) AS failed,
-            COUNT(DISTINCT CASE WHEN TRY_CONVERT(int, q.Status) = 6 THEN q.QueueID END) AS error
+            COUNT(DISTINCT CASE WHEN ${sqlInt("q.Status")} = 4 THEN q.QueueID END) AS failed,
+            COUNT(DISTINCT CASE WHEN ${sqlInt("q.Status")} = 6 THEN q.QueueID END) AS error
         FROM E_InvoiceQueue q
         WHERE q.DocType = ${CREDIT_NOTE_DOC_TYPE}
         ${dateFilter.replace('WHERE', 'AND')}
@@ -254,7 +255,7 @@ ${OUTBOUND_TRANSACTION_JOIN}
             INNER JOIN E_InvoiceQueue q
                 ON e.invoice_no = q.InvNumber AND e.DocType = q.DocType
 ${OUTBOUND_TRANSACTION_JOIN}
-            WHERE TRY_CONVERT(int, q.Status) = ${statusCode}
+            WHERE ${sqlInt("q.Status")} = ${statusCode}
             AND e.DocType = ${CREDIT_NOTE_DOC_TYPE} AND q.DocType = ${CREDIT_NOTE_DOC_TYPE}
             ${dateFilter}
             GROUP BY e.invoice_no
@@ -271,7 +272,7 @@ ${OUTBOUND_TRANSACTION_JOIN}
             INNER JOIN E_InvoiceQueue q
                 ON e.invoice_no = q.InvNumber AND e.DocType = q.DocType
 ${OUTBOUND_TRANSACTION_JOIN}
-            WHERE TRY_CONVERT(int, q.Status) = 3
+            WHERE ${sqlInt("q.Status")} = 3
             AND e.DocType = ${CREDIT_NOTE_DOC_TYPE} AND q.DocType = ${CREDIT_NOTE_DOC_TYPE}
             ${dateFilter}
             GROUP BY e.invoice_no
@@ -287,7 +288,7 @@ ${OUTBOUND_TRANSACTION_JOIN}
             INNER JOIN E_InvoiceQueue q
                 ON e.invoice_no = q.InvNumber AND e.DocType = q.DocType
 ${OUTBOUND_TRANSACTION_JOIN}
-            WHERE TRY_CONVERT(int, q.Status) = 1
+            WHERE ${sqlInt("q.Status")} = 1
             AND ISNULL(q.IsInvoiced, 0) = 1
             AND e.DocType = ${CREDIT_NOTE_DOC_TYPE} AND q.DocType = ${CREDIT_NOTE_DOC_TYPE}
             ${dateFilter}
@@ -307,7 +308,7 @@ ${OUTBOUND_TRANSACTION_JOIN}
         WHERE 1 = 1
         AND e.DocType = ${CREDIT_NOTE_DOC_TYPE}
         AND (q.QueueID IS NULL OR q.DocType = ${CREDIT_NOTE_DOC_TYPE})
-        AND (q.QueueID IS NULL OR ISNULL(TRY_CONVERT(int, q.Status), -1) <> 0)
+        AND (q.QueueID IS NULL OR ISNULL(${sqlInt("q.Status")}, -1) <> 0)
         ${dateFilter}
         GROUP BY e.invoice_no
         ORDER BY MAX(e.invoice_issue_date) DESC

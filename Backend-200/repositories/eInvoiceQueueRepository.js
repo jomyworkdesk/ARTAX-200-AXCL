@@ -1,4 +1,5 @@
 const db = require("../db");
+const { sqlInt } = require("../utils/sqlCompatibility");
 
 const normalizeText = (value) => {
     if (value === null || value === undefined || value === "") return null;
@@ -113,18 +114,18 @@ const markArtaxErrorsByInvoiceNumbers = async ({ invoiceNumbers, docType, errorM
 };
 
 const lockAutoSendQueue = async (client = db, batchSize = 5) => {
-    const result = await client.query`
+    const result = await client.queryStatement(`
         ;WITH next_queue AS (
-            SELECT TOP (${batchSize}) q.QueueID
+            SELECT TOP (@p0) q.QueueID
             FROM E_InvoiceQueue q
-            WHERE TRY_CONVERT(int, q.autosend) = 1
+            WHERE ${sqlInt("q.autosend")} = 1
               AND q.DocType IN (1, 4)
               AND ISNULL(q.IsInvoiced, 0) = 1
               AND ISNULL(q.IsArtax, 0) = 0
               AND ISNULL(q.IsSent, 0) = 0
               AND ISNULL(q.IsProcessing, 0) = 0
               AND ISNULL(q.IsError, 0) = 0
-              AND TRY_CONVERT(int, q.Status) = 1
+              AND ${sqlInt("q.Status")} = 1
               AND EXISTS (
                   SELECT 1
                   FROM E_Invoicing e
@@ -141,13 +142,13 @@ const lockAutoSendQueue = async (client = db, batchSize = 5) => {
         SET IsProcessing = 1
         OUTPUT inserted.QueueID, inserted.AutoIndex, inserted.DocType, inserted.InvNumber
         WHERE QueueID IN (SELECT QueueID FROM next_queue)
-    `;
+    `, [batchSize]);
 
     return result;
 };
 
 const getAutoSendQueueStatus = async (client = db) => {
-    const rows = await client.query`
+    const rows = await client.queryStatement(`
         ;WITH queue_status AS (
             SELECT
                 q.autosend,
@@ -170,31 +171,31 @@ const getAutoSendQueueStatus = async (client = db) => {
             FROM E_InvoiceQueue q
         )
         SELECT
-            COUNT(CASE WHEN TRY_CONVERT(int, autosend) = 1 THEN 1 END) AS autoSendOn,
-            COUNT(CASE WHEN TRY_CONVERT(int, autosend) = 2 THEN 1 END) AS autoSendOff,
-            COUNT(CASE WHEN TRY_CONVERT(int, autosend) = 1
+            COUNT(CASE WHEN ${sqlInt("autosend")} = 1 THEN 1 END) AS autoSendOn,
+            COUNT(CASE WHEN ${sqlInt("autosend")} = 2 THEN 1 END) AS autoSendOff,
+            COUNT(CASE WHEN ${sqlInt("autosend")} = 1
                          AND ISNULL(IsInvoiced, 0) = 1
                          AND ISNULL(IsArtax, 0) = 0
                          AND ISNULL(IsSent, 0) = 0
                          AND ISNULL(IsProcessing, 0) = 0
                          AND ISNULL(IsError, 0) = 0
-                         AND TRY_CONVERT(int, Status) = 1
+                         AND ${sqlInt("Status")} = 1
                          AND HasEInvoicing = 1
                        THEN 1 END) AS readyToSend,
-            COUNT(CASE WHEN TRY_CONVERT(int, autosend) = 1
+            COUNT(CASE WHEN ${sqlInt("autosend")} = 1
                          AND ISNULL(IsInvoiced, 0) = 0
                        THEN 1 END) AS waitingForEInvoicing,
-            COUNT(CASE WHEN TRY_CONVERT(int, autosend) = 1
+            COUNT(CASE WHEN ${sqlInt("autosend")} = 1
                          AND ISNULL(IsProcessing, 0) = 1
                        THEN 1 END) AS processing,
-            COUNT(CASE WHEN TRY_CONVERT(int, autosend) = 1
+            COUNT(CASE WHEN ${sqlInt("autosend")} = 1
                          AND ISNULL(IsSent, 0) = 1
                        THEN 1 END) AS sent,
-            COUNT(CASE WHEN TRY_CONVERT(int, autosend) = 1
+            COUNT(CASE WHEN ${sqlInt("autosend")} = 1
                          AND ISNULL(IsError, 0) = 1
                        THEN 1 END) AS error
         FROM queue_status
-    `;
+    `);
 
     return rows[0] || {};
 };

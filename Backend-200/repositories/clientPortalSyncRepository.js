@@ -1,4 +1,5 @@
 const db = require("../db");
+const { sqlInt } = require("../utils/sqlCompatibility");
 
 const normalizeText = (value) => {
     if (value === null || value === undefined || value === "") return null;
@@ -32,8 +33,8 @@ const getPendingOutboundTransactions = async ({
     limit = 10,
     client = db
 } = {}) =>
-    client.query`
-        SELECT TOP (${getSafeLimit(limit)})
+    client.queryStatement(`
+        SELECT TOP (@p0)
             q.[QueueID],
             c.[RefCode] AS [clientCode],
             c.[PeppolId] AS [Peppolid],
@@ -43,7 +44,7 @@ const getPendingOutboundTransactions = async ({
             CONVERT(varchar(10), q.[InvDate], 23) AS [DocDate],
             q.[InvNumber] AS [Invoiceno],
             CASE
-                WHEN TRY_CONVERT(INT, q.[DocType]) = 4 THEN 'Invoice'
+                WHEN ${sqlInt("q.[DocType]")} = 4 THEN 'Invoice'
                 ELSE 'CreditNote'
             END AS [Type],
             'outbound' AS [transtype]
@@ -60,14 +61,14 @@ const getPendingOutboundTransactions = async ({
         WHERE ISNULL(q.[IsReceived], 0) = 1
           AND ISNULL(q.[IsPortal], 0) <> 1
         ORDER BY q.[QueueID]
-    `;
+    `, [getSafeLimit(limit)]);
 
 const getPendingInboundTransactions = async ({
     limit = 10,
     client = db
 } = {}) =>
-    client.query`
-        SELECT TOP (${getSafeLimit(limit)})
+    client.queryStatement(`
+        SELECT TOP (@p0)
             q.[QueueId],
             c.[RefCode] AS [clientCode],
             c.[PeppolId] AS [Peppolid],
@@ -77,8 +78,8 @@ const getPendingInboundTransactions = async ({
             CONVERT(varchar(10), q.[TransCreatedAt], 23) AS [DocDate],
             q.[InvoiceNo] AS [Invoiceno],
             CASE
-                WHEN TRY_CONVERT(INT, q.[InvoiceType]) = 380 THEN 'Invoice'
-                WHEN TRY_CONVERT(INT, q.[InvoiceType]) = 381 THEN 'CreditNote'
+                WHEN ${sqlInt("q.[InvoiceType]")} = 380 THEN 'Invoice'
+                WHEN ${sqlInt("q.[InvoiceType]")} = 381 THEN 'CreditNote'
                 ELSE 'CreditNote'
             END AS [Type],
             'inbound' AS [transtype]
@@ -95,7 +96,7 @@ const getPendingInboundTransactions = async ({
         WHERE ISNULL(q.[IsInserted], 0) = 1
           AND ISNULL(q.[IsPortal], 0) <> 1
         ORDER BY q.[QueueId]
-    `;
+    `, [getSafeLimit(limit)]);
 
 const buildIdClause = (ids = []) =>
     ids

@@ -1,4 +1,5 @@
 const db = require("../db");
+const { sqlInt } = require("../utils/sqlCompatibility");
 
 const normalizeText = (value) => {
     if (value === null || value === undefined || value === "") return null;
@@ -15,8 +16,8 @@ const getEligibleInvoiceQueueRows = async ({
     limit = Number(process.env.OUTBOUND_MLS_BATCH_SIZE) || 50,
     client = db
 } = {}) =>
-    client.query`
-        SELECT TOP (${Number.isFinite(Number(limit)) && Number(limit) > 0 ? Number(limit) : 50})
+    client.queryStatement(`
+        SELECT TOP (@p0)
             [QueueID],
             [InvNumber],
             [DocType],
@@ -25,10 +26,10 @@ const getEligibleInvoiceQueueRows = async ({
             [OutMlsAt]
         FROM [E_InvoiceQueue]
         WHERE NULLIF(LTRIM(RTRIM([instanceIdentifier])), '') IS NOT NULL
-          AND ISNULL(TRY_CONVERT(INT, [OutMls]), 0) < 4
+          AND ISNULL(${sqlInt("[OutMls]")}, 0) < 4
           AND IsReceived = 1
         ORDER BY [QueueID]
-    `;
+    `, [Number.isFinite(Number(limit)) && Number(limit) > 0 ? Number(limit) : 50]);
 
 const upsertOutboundTransactionDetails = async ({
     rootInstanceIdentifier,

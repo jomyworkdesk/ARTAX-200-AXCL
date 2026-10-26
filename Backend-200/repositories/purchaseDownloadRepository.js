@@ -1,4 +1,5 @@
 const db = require("../db");
+const { sqlInt } = require("../utils/sqlCompatibility");
 
 const PURCHASE_TABLE = "E_Purchase";
 const IN_DOCUMENT_TABLE = "E_InvoiceinDocument";
@@ -129,17 +130,17 @@ const getQueuedInstancesByCorrelationId = async ({ correlationId, client = db })
     `;
 
 const getIncompleteTransactionQueueRows = async ({ limit = 100, client = db } = {}) =>
-    client.query`
-        SELECT TOP (${Number.isFinite(Number(limit)) && Number(limit) > 0 ? Number(limit) : 100})
+    client.queryStatement(`
+        SELECT TOP (@p0)
             [QueueId],
             [InstanceIdentifier],
             [TransactionId],
             [TransCount]
         FROM [E_PurchaseQueue]
         WHERE [InstanceIdentifier] IS NOT NULL
-          AND (TRY_CONVERT(INT, [TransCount]) IS NULL OR TRY_CONVERT(INT, [TransCount]) <> 4)
+          AND (${sqlInt("[TransCount]")} IS NULL OR ${sqlInt("[TransCount]")} <> 4)
         ORDER BY [QueueId]
-    `;
+    `, [Number.isFinite(Number(limit)) && Number(limit) > 0 ? Number(limit) : 100]);
 
 const getQueuedTransactionsByCorrelationId = async ({ correlationId, client = db }) =>
     client.query`
