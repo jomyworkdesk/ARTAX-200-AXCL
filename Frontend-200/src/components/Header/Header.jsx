@@ -24,8 +24,7 @@ const ISSUES_NAV_ITEMS = [
 
 const CONFIGURE_NAV_ITEMS = [
   { route: '/configure/master', label: 'Master' },
-  { route: '/configure/seller', label: 'Seller' },
-  { route: '/configure/buyer', label: 'Buyer' }
+  { route: '/configure/seller', label: 'Seller' }
 ];
 
 const Header = () => {
