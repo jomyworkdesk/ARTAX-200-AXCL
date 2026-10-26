@@ -1,3 +1,4 @@
+const httpRequest = require("../utils/httpRequest");
 const tokenRepository = require("../repositories/eInvoiceTokenRepository");
 const responseRepository = require("../repositories/eInvoiceResponseRepository");
 const queueRepository = require("../repositories/eInvoiceQueueRepository");
@@ -92,7 +93,7 @@ const getFetchErrorDetail = (error) => {
 
 const fetchTaxilla = async (url, options, label) => {
     try {
-        return await fetch(url, {
+        return await httpRequest(url, {
             ...options,
             headers: {
                 "User-Agent": OUTBOUND_USER_AGENT,

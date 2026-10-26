@@ -1,4 +1,5 @@
 const crypto = require("crypto");
+const httpRequest = require("../utils/httpRequest");
 const { requestAccessToken } = require("./taxillaService");
 const purchaseDownloadRepository = require("../repositories/purchaseDownloadRepository");
 const { sendPurchaseQueueMail } = require("./purchaseQueueMailerService");
@@ -48,7 +49,7 @@ const getFetchErrorDetail = (error) => {
 
 const fetchTaxilla = async (url, options, label) => {
     try {
-        return await fetch(url, {
+        return await httpRequest(url, {
             ...options,
             headers: {
                 "User-Agent": OUTBOUND_USER_AGENT,

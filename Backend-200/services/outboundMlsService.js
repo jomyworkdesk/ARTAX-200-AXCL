@@ -1,3 +1,4 @@
+const httpRequest = require("../utils/httpRequest");
 const { requestAccessToken } = require("./taxillaService");
 const outboundMlsRepository = require("../repositories/outboundMlsRepository");
 
@@ -47,7 +48,7 @@ const getFetchErrorDetail = (error) => {
 
 const fetchTaxilla = async (url, options, label) => {
     try {
-        return await fetch(url, {
+        return await httpRequest(url, {
             ...options,
             headers: {
                 "User-Agent": OUTBOUND_USER_AGENT,
