@@ -21,7 +21,11 @@ const getConfig = () => {
         database: process.env.DB_NAME,
         options: {
             encrypt: toBoolean(process.env.DB_ENCRYPT),
-            trustServerCertificate: toBoolean(process.env.DB_TRUST_CERT)
+            trustServerCertificate: toBoolean(process.env.DB_TRUST_CERT),
+            // Temporary compatibility with SQL Server 2008 R2 RTM.
+            cryptoCredentialsDetails: {
+                minVersion: "TLSv1"
+            }
         }
     };
 };
