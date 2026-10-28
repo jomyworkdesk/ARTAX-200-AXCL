@@ -227,7 +227,12 @@ rootClient.withTransaction = async (callback) => {
         await transaction.commit();
         return result;
     } catch (error) {
-        await transaction.rollback();
+        try {
+            await transaction.rollback();
+        } catch (rollbackError) {
+            // SQL Server may have already rolled back a deadlock victim.
+            error.rollbackError = rollbackError;
+        }
         throw error;
     }
 };
@@ -282,7 +287,12 @@ rootClient.forDatabase = (databaseName) => {
                 await transaction.commit();
                 return result;
             } catch (error) {
-                await transaction.rollback();
+                try {
+                    await transaction.rollback();
+                } catch (rollbackError) {
+                    // Preserve the original SQL error for callers and retry handling.
+                    error.rollbackError = rollbackError;
+                }
                 throw error;
             }
         }

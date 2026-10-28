@@ -1,22 +1,28 @@
 const db = require("../db");
 const invoiceSyncRepository = require("../repositories/invoiceSyncRepository");
 
-const UPSERT_CONCURRENCY = 2;
+const DEADLOCK_MAX_ATTEMPTS = 3;
+const DEADLOCK_RETRY_DELAY_MS = 500;
 let isRunning = false;
 
-const runWithConcurrency = async (items, limit, worker) => {
-    let index = 0;
-    const workerCount = Math.min(limit, items.length);
+const runWithDeadlockRetry = async (operation, worker) => {
+    for (let attempt = 1; ; attempt += 1) {
+        try {
+            return await worker();
+        } catch (error) {
+            error.syncOperation = operation;
+            const errorNumber = Number(error.number ?? error.originalError?.info?.number);
 
-    const workers = Array.from({ length: workerCount }, async () => {
-        while (index < items.length) {
-            const currentIndex = index;
-            index += 1;
-            await worker(items[currentIndex]);
+            // Timeouts can have an uncertain outcome; retry only rolled-back deadlocks.
+            if (errorNumber !== 1205 || attempt >= DEADLOCK_MAX_ATTEMPTS) {
+                throw error;
+            }
+
+            const delay = DEADLOCK_RETRY_DELAY_MS * attempt + Math.floor(Math.random() * 250);
+            console.warn(`Sage Transaction Sync deadlock during ${operation}; retrying (${attempt + 1}/${DEADLOCK_MAX_ATTEMPTS}) in ${delay}ms`);
+            await new Promise((resolve) => setTimeout(resolve, delay));
         }
-    });
-
-    await Promise.all(workers);
+    }
 };
 
 const normalizeAutoIndex = (value) => {
@@ -86,9 +92,8 @@ const syncInvoiceNumbers = async (documents = [], defaultDocType = null) => {
         };
     }
 
-    const rows = await invoiceSyncRepository.fetchInvoiceSourceRows(
-        db,
-        sanitizedDocuments
+    const rows = await runWithDeadlockRetry("fetch invoice source rows", () =>
+        invoiceSyncRepository.fetchInvoiceSourceRows(db, sanitizedDocuments)
     );
     const uniqueRows = [
         ...new Map(
@@ -96,9 +101,12 @@ const syncInvoiceNumbers = async (documents = [], defaultDocType = null) => {
         ).values()
     ];
 
-    await runWithConcurrency(uniqueRows, UPSERT_CONCURRENCY, (row) =>
-        invoiceSyncRepository.upsertInvoiceRow(db, row)
-    );
+    // Keep the existence check and write atomic, with no competing writes from this run.
+    for (const row of uniqueRows) {
+        await runWithDeadlockRetry(`upsert invoice line ${row.InvoiceLineIdentifier}`, () =>
+            db.withTransaction((tx) => invoiceSyncRepository.upsertInvoiceRow(tx, row))
+        );
+    }
 
     const fetchedDocuments = [
         ...new Map(
@@ -129,10 +137,11 @@ const syncInvoices = async () => {
     }
 
     isRunning = true;
+    let queueData = [];
 
     try {
-        const queueData = await db.withTransaction((tx) =>
-            invoiceSyncRepository.lockPendingQueue(tx)
+        queueData = await runWithDeadlockRetry("claim queue entries", () =>
+            db.withTransaction((tx) => invoiceSyncRepository.lockPendingQueue(tx))
         );
 
         if (queueData.length === 0) {
@@ -158,10 +167,12 @@ const syncInvoices = async () => {
         const matchedQueueRows = queueData.filter(hasFetchedDocument);
         const unmatchedQueueRows = queueData.filter((queueRow) => !hasFetchedDocument(queueRow));
 
-        await db.withTransaction(async (tx) => {
+        await runWithDeadlockRetry("complete queue entries", () =>
+            db.withTransaction(async (tx) => {
                 await invoiceSyncRepository.markQueueInvoiced(tx, matchedQueueRows);
                 await invoiceSyncRepository.releaseQueueEntries(tx, unmatchedQueueRows);
-            });
+            })
+        );
 
         console.log("Sage Transaction Sync Completed");
         return {
@@ -172,7 +183,15 @@ const syncInvoices = async () => {
         };
     } catch (error) {
         console.error("Sync Error:", error);
-        await invoiceSyncRepository.releaseStuckQueue();
+        if (queueData.length > 0) {
+            try {
+                await runWithDeadlockRetry("release claimed queue entries", () =>
+                    invoiceSyncRepository.releaseQueueEntries(db, queueData)
+                );
+            } catch (releaseError) {
+                console.error("Failed to release sync queue entries:", releaseError);
+            }
+        }
         throw error;
     } finally {
         isRunning = false;
