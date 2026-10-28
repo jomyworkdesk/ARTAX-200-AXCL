@@ -584,9 +584,9 @@ const updateEMCountryMapping = async (mappings) =>
 
 const getPaymentTypes = async () =>
     db.query`
-        SELECT DISTINCT ulIDSOrdPaymentmode as ExistingMaster
-        FROM InvNum
-        WHERE ulIDSOrdPaymentmode IS NOT NULL AND ulIDSOrdPaymentmode != ''
+        SELECT TOP (1) [cLookupOptions]
+        FROM [_rtblUserDict]
+        WHERE [cFieldDescription] = 'ulIDSOrdPaymentmode'
     `;
 
 const getEMPaymentTypeCodes = async () =>

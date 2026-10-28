@@ -405,15 +405,16 @@ const updateCountryMapping = async (mappings) => {
 };
 
 const getPaymentMapping = async () => {
-    const paymentTypes = await configureRepo.getPaymentTypes();
+    const lookupRows = await configureRepo.getPaymentTypes();
     const emPaymentTypes = await configureRepo.getEMPaymentTypeCodes();
+    const paymentTypes = splitLookupOptions(lookupRows);
 
     const tableData = paymentTypes.map((payment, index) => {
-        const mapping = emPaymentTypes.find(em => em.Mapped === payment.ExistingMaster);
+        const mapping = emPaymentTypes.find(em => em.Mapped === payment);
         return {
             slNo: index + 1,
-            id: payment.ExistingMaster,
-            description: payment.ExistingMaster,
+            id: payment,
+            description: payment,
             status: mapping ? true : false,
             mappedTo: mapping ? mapping.AutoIndex : null,
             mappedDisplayName: mapping ? mapping.DisplayName : null
