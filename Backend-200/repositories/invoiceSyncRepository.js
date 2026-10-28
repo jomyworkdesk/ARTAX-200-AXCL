@@ -219,7 +219,7 @@ const fetchInvoiceSourceRows = async (client = db, documents) => {
             I.[Address4] AS DeliverToCity,
             I.[Address5] AS DeliverToPostCode,
             DCO.[Value] AS DeliverToCountryCode,
-            I.[ucIDSOrdDeliveryState] AS DeliverToCountrySubdivision,
+            C.[ucARDeliveryState] AS DeliverToCountrySubdivision,
             I.DueDate AS InvoicePaymentDueDate,
             CASE
                 WHEN I.ForeignCurrencyID = 0 THEN 'AED'
@@ -319,7 +319,7 @@ const fetchInvoiceSourceRows = async (client = db, documents) => {
         LEFT JOIN EM_VATCategoryCode VC ON I.bTaxPerLine = VC.Mapped
         LEFT JOIN EM_InvoiceTransactionType ITT ON UDF.ulIDSOrdInvoiceTransactionType = ITT.Mapped
         LEFT JOIN EM_CreditNoteReason CRR ON UDF.ulIDCrnCreditNoteReason = CRR.Mapped
-        LEFT JOIN [EM_CountryCode] DCO ON I.ulIDSOrdDeliveryCountry = DCO.Mapped
+        LEFT JOIN [EM_CountryCode] DCO ON C.ulARDeliveryCountry = DCO.Mapped
         OUTER APPLY (
             SELECT TOP (1) CONVERT(varchar(max), PA.cAllocs) AS cAllocs
             FROM PostAR PA
