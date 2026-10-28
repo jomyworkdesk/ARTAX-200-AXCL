@@ -441,7 +441,7 @@ const getCountrySubdivisionLookup = async () =>
     db.query`
         SELECT TOP (1) [cLookupOptions]
         FROM [_rtblUserDict]
-        WHERE [cFieldName] = 'CountrySubdivision'
+        WHERE [cFieldName] = 'ulARCountrySubdivision'
     `;
 
 const getEMStates = async () =>
