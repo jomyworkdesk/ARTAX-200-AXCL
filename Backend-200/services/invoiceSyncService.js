@@ -1,7 +1,7 @@
 const db = require("../db");
 const invoiceSyncRepository = require("../repositories/invoiceSyncRepository");
 
-const UPSERT_CONCURRENCY = 5;
+const UPSERT_CONCURRENCY = 2;
 let isRunning = false;
 
 const runWithConcurrency = async (items, limit, worker) => {
