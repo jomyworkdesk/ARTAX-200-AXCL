@@ -11,6 +11,22 @@ const buildSqlStringList = (values) =>
         .map((value) => `'${String(value).replace(/'/g, "''")}'`)
         .join(",");
 
+// Field names are internal constants; aggregate to keep one UDF row per invoice.
+const buildInvoiceUdfApply = (fields) => {
+    const columns = fields
+        .map((field) => `MAX(CASE WHEN UD.[cFieldName] = '${field}' THEN CONVERT(nvarchar(max), UH.[UserValue]) END) AS [${field}]`)
+        .join(",\n                ");
+
+    return `OUTER APPLY (
+            SELECT
+                ${columns}
+            FROM [_etblUserHistLink] UH
+            INNER JOIN [_rtblUserDict] UD ON UH.[UserDictID] = UD.[idUserDict]
+            WHERE UH.[TableID] = I.AutoIndex
+              AND UD.[cFieldName] IN (${buildSqlStringList(fields)})
+        ) UDF`;
+};
+
 const normalizeAutoIndex = (value) => {
     const autoIndex = Number(value);
     return Number.isFinite(autoIndex) ? autoIndex : null;
@@ -240,10 +256,10 @@ const fetchInvoiceSourceRows = async (client = db, documents) => {
             CASE WHEN I.ForeignCurrencyID <> 0 THEN I.fInvDiscAmntExForeign ELSE I.InvDiscAmntEx END AS DocAllowAmount,
             CASE WHEN I.ForeignCurrencyID <> 0 THEN I.fInvDiscAmntExForeign ELSE I.InvDiscAmntEx END AS TotalDocAllowances,
             CASE WHEN I.ForeignCurrencyID <> 0 THEN I.fInvTotExclDExForeign ELSE I.InvTotExclDEx END AS DocAllowBaseAmount,
-            CASE WHEN I.DocType = 1 THEN I.ucIDCrnDiscountReason ELSE I.ucIDSOrdDiscountReason END AS DocAllowReason,
-            CASE WHEN I.DocType = 1 THEN I.ulIDCrnDiscountVat ELSE I.ulIDSOrdDiscountVat END AS DocAllowVatRate,
+            CASE WHEN I.DocType = 1 THEN UDF.ucIDCrnDiscountReason ELSE UDF.ucIDSOrdDiscountReason END AS DocAllowReason,
+            CASE WHEN I.DocType = 1 THEN UDF.ulIDCrnDiscountVat ELSE UDF.ulIDSOrdDiscountVat END AS DocAllowVatRate,
             VER.Value AS DocAllowVatExemptCode,
-            CASE WHEN I.DocType = 1 THEN I.[ucIDCrnZerorateReason] ELSE I.[ucIDSOrdZerorateReason] END AS DocAllowVatExemptText,
+            CASE WHEN I.DocType = 1 THEN UDF.[ucIDCrnZerorateReason] ELSE UDF.[ucIDSOrdZerorateReason] END AS DocAllowVatExemptText,
 
             C.[ucARElectronicAddress] AS BuyerElectronicAddress,
             EEA.Value AS BuyerElectronicSchemeId,
@@ -280,12 +296,27 @@ const fetchInvoiceSourceRows = async (client = db, documents) => {
             PT.Value AS PaymentType,
             GST.Value AS GoodsServiceType,
             VER.Value AS VatExemptReasonCode,
-            CASE WHEN I.DocType = 1 THEN I.[ucIDCrnZerorateReason] ELSE I.[ucIDSOrdZerorateReason] END AS VatExemptReasonText,
+            CASE WHEN I.DocType = 1 THEN UDF.[ucIDCrnZerorateReason] ELSE UDF.[ucIDSOrdZerorateReason] END AS VatExemptReasonText,
             VC.Value AS VatCategory,
             I.DocType AS DocType,
             I.Description AS EInvoiceType
 
         FROM [InvNum] I
+        ${buildInvoiceUdfApply([
+            "ulIDSOrdInvoiceTransactionType",
+            "ulIDSOrdPaymentmode",
+            "ulIDSOrdExemptReason",
+            "ulIDSOrdRcmType",
+            "ucIDSOrdZerorateReason",
+            "ucIDSOrdDiscountReason",
+            "ulIDSOrdDiscountVat",
+            "ulIDCrnCreditNoteReason",
+            "ucIDCrnDiscountReason",
+            "ulIDCrnDiscountVat",
+            "ulIDCrnExemptReason",
+            "ulIDCrnRcmType",
+            "ucIDCrnZerorateReason"
+        ])}
         LEFT JOIN (
             SELECT Reference, MAX(Period) AS Period
             FROM PostGL
@@ -299,12 +330,12 @@ const fetchInvoiceSourceRows = async (client = db, documents) => {
         LEFT JOIN EM_ElectronicAddressScheme_Ces EEA ON C.ulARSchemeIdentifier = EEA.Mapped
         LEFT JOIN EM_State ST ON C.[ulARCountrySubdivision] = ST.Mapping
         LEFT JOIN EM_CountryCode CC ON C.ulARCountryCode = CC.Mapped
-        LEFT JOIN EM_PaymentTypeCode PT ON I.ulIDSOrdPaymentmode = PT.Mapped
-        LEFT JOIN [EM_GoodsServiceType] GST ON GST.Mapped = CASE WHEN I.DocType = 1 THEN I.[ulIDCrnRcmType] ELSE I.[ulIDSOrdRcmType] END
-        LEFT JOIN [EM_VATExemptionReason] VER ON VER.Mapped = CASE WHEN I.DocType = 1 THEN I.[ulIDCrnExemptReason] ELSE I.[ulIDSOrdExemptReason] END
+        LEFT JOIN EM_PaymentTypeCode PT ON UDF.ulIDSOrdPaymentmode = PT.Mapped
+        LEFT JOIN [EM_GoodsServiceType] GST ON GST.Mapped = CASE WHEN I.DocType = 1 THEN UDF.[ulIDCrnRcmType] ELSE UDF.[ulIDSOrdRcmType] END
+        LEFT JOIN [EM_VATExemptionReason] VER ON VER.Mapped = CASE WHEN I.DocType = 1 THEN UDF.[ulIDCrnExemptReason] ELSE UDF.[ulIDSOrdExemptReason] END
         LEFT JOIN EM_VATCategoryCode VC ON I.bTaxPerLine = VC.Mapped
-        LEFT JOIN EM_InvoiceTransactionType ITT ON I.ulIDSOrdInvoiceTransactionType = ITT.Mapped
-        LEFT JOIN EM_CreditNoteReason CRR ON I.ulIDCrnCreditNoteReason = CRR.Mapped
+        LEFT JOIN EM_InvoiceTransactionType ITT ON UDF.ulIDSOrdInvoiceTransactionType = ITT.Mapped
+        LEFT JOIN EM_CreditNoteReason CRR ON UDF.ulIDCrnCreditNoteReason = CRR.Mapped
         LEFT JOIN [EM_CountryCode] DCO ON I.ulIDSOrdDeliveryCountry = DCO.Mapped
         LEFT JOIN [EM_ElectronicAddressScheme_Ces] DEA ON I.ulIDSOrdLocationSchemeID = DEA.Mapped
         OUTER APPLY (
@@ -357,11 +388,12 @@ const fetchInvoiceSourceRows = async (client = db, documents) => {
             CASE WHEN I.ForeignCurrencyID <> 0 THEN IL.fQtyProcessedLineTotExclForeign ELSE IL.fQtyProcessedLineTotExcl END AS LineNet,
             CASE WHEN I.ForeignCurrencyID <> 0 THEN IL.fQtyProcessedLineTaxAmountForeign ELSE IL.fQtyProcessedLineTaxAmount END AS LineTax,
             CASE WHEN I.ForeignCurrencyID <> 0 THEN IL.fQtyProcessedLineTotInclForeign ELSE IL.fQtyProcessedLineTotIncl END AS LineTotal,
-            CASE WHEN I.DocType = 1 THEN I.ucIDCrnDiscountReason ELSE I.ucIDSOrdDiscountReason END AS LineAllowReason,
+            CASE WHEN I.DocType = 1 THEN UDF.ucIDCrnDiscountReason ELSE UDF.ucIDSOrdDiscountReason END AS LineAllowReason,
             IL.fLineDiscount AS LineAllowPercent,
             CASE WHEN I.ForeignCurrencyID <> 0 THEN IL.fQtyProcessedLineTotExclNoDiscForeign ELSE IL.fQtyProcessedLineTotExclNoDisc END AS LineAllowBaseAmount,
             CASE WHEN I.ForeignCurrencyID <> 0 THEN (IL.fQtyProcessedLineTotExclNoDiscForeign - IL.fQtyProcessedLineTotExclForeign) ELSE (IL.fQtyProcessedLineTotExclNoDisc - IL.fQtyProcessedLineTotExcl) END AS LineAllowAmount
         FROM [InvNum] I
+        ${buildInvoiceUdfApply(["ucIDSOrdDiscountReason", "ucIDCrnDiscountReason"])}
         INNER JOIN _btblInvoiceLines IL ON IL.iInvoiceID = I.AutoIndex
         LEFT JOIN [StkItem] stk ON IL.iStockCodeID = stk.StockLink
         LEFT JOIN [EM_ElectronicAddressScheme_Ces] obj ON stk.ulIIStandardScheme = obj.Mapped
@@ -385,8 +417,9 @@ const fetchInvoiceSourceRows = async (client = db, documents) => {
             MAX(VIC.Value) AS DocChargeVatCategory,
             MAX(VIC.Description) AS DocChargeVatRate
         FROM [InvNum] I
+        ${buildInvoiceUdfApply(["ulIDSOrdChargesReason", "ulIDCrnChargesReason"])}
         INNER JOIN _btblInvoiceLines IL ON IL.iInvoiceID = I.AutoIndex
-        LEFT JOIN EM_ChargeCode ch ON CASE WHEN I.DocType = 1 THEN I.ulIDCrnChargesReason ELSE I.ulIDSOrdChargesReason END = ch.Mapped
+        LEFT JOIN EM_ChargeCode ch ON CASE WHEN I.DocType = 1 THEN UDF.ulIDCrnChargesReason ELSE UDF.ulIDSOrdChargesReason END = ch.Mapped
         LEFT JOIN EM_VATCategoryCode VIC ON IL.iTaxTypeID = VIC.Mapped
         WHERE (${docFilter})
         AND I.DocState = 4

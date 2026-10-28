@@ -38,33 +38,37 @@ const markSentByInvoiceNumber = async ({ invNumber, docType, instanceIdentifier 
 const markArtaxErrorByInvoiceNumber = async ({ invNumber, docType, errorMessage }) => {
     if (!invNumber) return 0;
 
-    const updateInvNumArtaxErrorStatus = async () => {
+    const insertArtaxErrorStatusHistory = async () => {
         if (docType === null || docType === undefined) {
             await db.execute`
-                UPDATE I
-                SET   ucIDSOrdEinvoiceStatus = ${normalizeText("Error")},
-                      ucIDCrnEinvoiceStatus = ${normalizeText("Error")}
-                FROM InvNum I
-                INNER JOIN E_InvoiceQueue q ON I.InvNumber = q.InvNumber AND (
-                    (I.DocType = q.DocType) OR (I.DocType IS NULL AND q.DocType IS NULL)
+                INSERT INTO [_etblUserHistLink] (
+                    [UserDictID], [TableID], [UserValue], [LastModifiedDate],
+                    [_etblUserHistLink_iBranchID]
                 )
+                SELECT DISTINCT
+                    UD.[idUserDict], q.[AutoIndex], ${normalizeText("Error")}, GETDATE(), 0
+                FROM E_InvoiceQueue q
+                CROSS JOIN [_rtblUserDict] UD
                 WHERE q.InvNumber = ${normalizeText(invNumber)}
                   AND q.[Status] IN (6)
+                  AND UD.[cFieldName] IN ('ucIDSOrdEinvoiceStatus', 'ucIDCrnEinvoiceStatus')
             `;
             return;
         }
 
         await db.execute`
-            UPDATE I
-            SET   ucIDSOrdEinvoiceStatus = ${normalizeText("Error")},
-                  ucIDCrnEinvoiceStatus = ${normalizeText("Error")}
-            FROM InvNum I
-            INNER JOIN E_InvoiceQueue q ON I.InvNumber = q.InvNumber AND (
-                (I.DocType = q.DocType) OR (I.DocType IS NULL AND q.DocType IS NULL)
+            INSERT INTO [_etblUserHistLink] (
+                [UserDictID], [TableID], [UserValue], [LastModifiedDate],
+                [_etblUserHistLink_iBranchID]
             )
+            SELECT DISTINCT
+                UD.[idUserDict], q.[AutoIndex], ${normalizeText("Error")}, GETDATE(), 0
+            FROM E_InvoiceQueue q
+            CROSS JOIN [_rtblUserDict] UD
             WHERE q.InvNumber = ${normalizeText(invNumber)}
               AND q.[Status] IN (6)
               AND q.DocType = ${docType}
+              AND UD.[cFieldName] IN ('ucIDSOrdEinvoiceStatus', 'ucIDCrnEinvoiceStatus')
         `;
     };
 
@@ -79,7 +83,7 @@ const markArtaxErrorByInvoiceNumber = async ({ invNumber, docType, errorMessage 
             WHERE InvNumber = ${normalizeText(invNumber)}
         `;
 
-        await updateInvNumArtaxErrorStatus();
+        await insertArtaxErrorStatusHistory();
         return affected || 0;
     }
 
@@ -94,7 +98,7 @@ const markArtaxErrorByInvoiceNumber = async ({ invNumber, docType, errorMessage 
           AND DocType = ${docType}
     `;
 
-    await updateInvNumArtaxErrorStatus();
+    await insertArtaxErrorStatusHistory();
     return affected || 0;
 };
 
@@ -230,17 +234,20 @@ const markResponseByInstanceIdentifier = async ({ instanceIdentifier, isSuccess 
         WHERE [instanceIdentifier] = ${normalizeText(instanceIdentifier)}
     `;
 
-    // Update InvNum status fields (statuses 3 (success) and 4 (failed)) to human-readable values
+    // Append human-readable success/failed statuses to the UDF history.
     await db.execute`
-        UPDATE I
-        SET   ucIDSOrdEinvoiceStatus = ${isSuccess ? normalizeText("Success") : normalizeText("Failed")},
-              ucIDCrnEinvoiceStatus = ${isSuccess ? normalizeText("Success") : normalizeText("Failed")}
-        FROM InvNum I
-        INNER JOIN E_InvoiceQueue q ON I.InvNumber = q.InvNumber AND (
-            (I.DocType = q.DocType) OR (I.DocType IS NULL AND q.DocType IS NULL)
+        INSERT INTO [_etblUserHistLink] (
+            [UserDictID], [TableID], [UserValue], [LastModifiedDate],
+            [_etblUserHistLink_iBranchID]
         )
+        SELECT DISTINCT
+            UD.[idUserDict], q.[AutoIndex],
+            ${isSuccess ? normalizeText("Success") : normalizeText("Failed")}, GETDATE(), 0
+        FROM E_InvoiceQueue q
+        CROSS JOIN [_rtblUserDict] UD
         WHERE q.[instanceIdentifier] = ${normalizeText(instanceIdentifier)}
           AND q.[Status] IN (3,4)
+          AND UD.[cFieldName] IN ('ucIDSOrdEinvoiceStatus', 'ucIDCrnEinvoiceStatus')
     `;
 
     return affected || 0;
