@@ -206,7 +206,7 @@ const fetchInvoiceSourceRows = async (client = db, documents) => {
     const headerRows = await client.queryUnsafe(`
         SELECT
             YEAR(P.dPeriodDate) AS FinancialYear,
-            CONVERT(varchar(10), DATEFROMPARTS(YEAR(P.dPeriodDate), MONTH(P.dPeriodDate), 1), 23) AS InvoicePeriodStart,
+            CONVERT(varchar(10), DATEADD(MONTH, DATEDIFF(MONTH, 0, P.dPeriodDate), 0), 23) AS InvoicePeriodStart,
             CONVERT(varchar(10), P.dPeriodDate, 23) AS InvoicePeriodEnd,
             I.AutoIndex AS ReferenceNumber,
             I.InvDate AS InvoiceIssueDate,
@@ -232,7 +232,7 @@ const fetchInvoiceSourceRows = async (client = db, documents) => {
             CASE WHEN I.ForeignCurrencyID <> 0 THEN 'AED' ELSE NULL END AS TaxAccountCurrency,
             CASE WHEN I.ForeignCurrencyID <> 0 THEN 'AED' ELSE NULL END AS InvoiceObjIdentifier,
             CASE WHEN I.ForeignCurrencyID <> 0 THEN 'aedtotal-incl-vat' ELSE NULL END AS InvoiceDocTypeCode,
-            CASE WHEN I.ForeignCurrencyID <> 0 THEN CONCAT('AED', I.InvTotIncl) ELSE NULL END AS InvocieDocDescription,
+            CASE WHEN I.ForeignCurrencyID <> 0 THEN 'AED' + ISNULL(CONVERT(varchar(50), I.InvTotIncl), '') ELSE NULL END AS InvocieDocDescription,
             CASE WHEN I.ForeignCurrencyID <> 0 THEN CUR.VALUE ELSE NULL END AS SourceCurrencyCode,
             CASE WHEN I.ForeignCurrencyID <> 0 THEN 'AED' ELSE NULL END AS TargetCurrencyCode,
             CASE WHEN I.ForeignCurrencyID <> 0 THEN I.fExchangeRate ELSE NULL END AS CalculationRate,
