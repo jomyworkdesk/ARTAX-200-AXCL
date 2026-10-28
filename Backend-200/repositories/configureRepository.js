@@ -201,7 +201,7 @@ const getUserDictLookupOptions = async (fieldDescription) => {
     const rows = await db.query`
         SELECT TOP (1) [cLookupOptions]
         FROM [_rtblUserDict]
-        WHERE [cFieldDescription] = ${fieldDescription}
+        WHERE [cFieldName] = ${fieldDescription}
     `;
 
     return (rows[0]?.cLookupOptions || '')
@@ -441,7 +441,7 @@ const getCountrySubdivisionLookup = async () =>
     db.query`
         SELECT TOP (1) [cLookupOptions]
         FROM [_rtblUserDict]
-        WHERE [cFieldDescription] = 'CountrySubdivision'
+        WHERE [cFieldName] = 'CountrySubdivision'
     `;
 
 const getEMStates = async () =>
@@ -550,7 +550,7 @@ const getCountryCodeLookup = async () =>
     db.query`
         SELECT TOP (1) [cLookupOptions]
         FROM [_rtblUserDict]
-        WHERE [cFieldDescription] = 'CountryCode'
+        WHERE [cFieldName] = 'CountryCode'
     `;
 
 const getEMCountryCodes = async () =>
@@ -586,7 +586,7 @@ const getPaymentTypes = async () =>
     db.query`
         SELECT TOP (1) [cLookupOptions]
         FROM [_rtblUserDict]
-        WHERE [cFieldDescription] = 'ulIDSOrdPaymentmode'
+        WHERE [cFieldName] = 'ulIDSOrdPaymentmode'
     `;
 
 const getEMPaymentTypeCodes = async () =>
@@ -622,21 +622,21 @@ const getInvoiceTypeLookup = async () =>
     db.query`
         SELECT [cLookupOptions]
         FROM [_rtblUserDict]
-        WHERE [cFieldDescription] = 'InvoiceType'
+        WHERE [cFieldName] = 'InvoiceType'
     `;
 
 const getSchemeIdentifierLookup = async () =>
     db.query`
         SELECT TOP (1) [cLookupOptions]
         FROM [_rtblUserDict]
-        WHERE [cFieldDescription] = 'SchemeIdentifier'
+        WHERE [cFieldName] = 'SchemeIdentifier'
     `;
 
 const getStandardSchemeLookup = async () =>
     db.query`
         SELECT TOP (1) [cLookupOptions]
         FROM [_rtblUserDict]
-        WHERE [cFieldDescription] = 'StandardScheme'
+        WHERE [cFieldName] = 'StandardScheme'
     `;
 
 const getEMElectronicAddressSchemes = async () =>
@@ -702,7 +702,7 @@ const getInvoiceTransactionTypeLookup = async () =>
     db.query`
         SELECT TOP (1) [cLookupOptions]
         FROM [_rtblUserDict]
-        WHERE [cFieldDescription] = 'InvoiceTransactionType'
+        WHERE [cFieldName] = 'InvoiceTransactionType'
     `;
 
 
@@ -739,35 +739,35 @@ const getCreditNoteReasonLookup = async () =>
     db.query`
         SELECT TOP (1) [cLookupOptions]
         FROM [_rtblUserDict]
-        WHERE [cFieldDescription] = 'CreditNoteReason'
+        WHERE [cFieldName] = 'CreditNoteReason'
     `;
 
 const getRcmTypeLookup = async () =>
     db.query`
         SELECT TOP (1) [cLookupOptions]
         FROM [_rtblUserDict]
-        WHERE [cFieldDescription] = 'RcmType'
+        WHERE [cFieldName] = 'RcmType'
     `;
 
     const getExemptReasonLookup = async () =>
     db.query`
         SELECT TOP (1) [cLookupOptions]
         FROM [_rtblUserDict]
-        WHERE [cFieldDescription] = 'ExemptReason'
+        WHERE [cFieldName] = 'ExemptReason'
     `;
 
 const getChargesReasonLookup = async () =>
     db.query`
         SELECT TOP (1) [cLookupOptions]
         FROM [_rtblUserDict]
-        WHERE [cFieldDescription] = 'ChargesReason'
+        WHERE [cFieldName] = 'ChargesReason'
     `;
 
 const getTddScopeLookup = async () =>
     db.query`
         SELECT TOP (1) [cLookupOptions]
         FROM [_rtblUserDict]
-        WHERE [cFieldDescription] = 'TDDScope'
+        WHERE [cFieldName] = 'TDDScope'
     `;
 
 const getEMCreditNoteReasons = async () =>
