@@ -54,9 +54,10 @@ const getContextDatabaseName = () =>
 
 const getPool = async (databaseName, options = {}) => {
     const selectedDatabase = normalizeDatabaseName(databaseName) ||
-        (options.ignoreContext ? null : getContextDatabaseName());
+        (options.ignoreContext ? null : getContextDatabaseName()) || dbConfig.database;
+    const requestTimeout = options.requestTimeout ?? dbConfig.requestTimeout;
 
-    if (!selectedDatabase || selectedDatabase === dbConfig.database) {
+    if (selectedDatabase === dbConfig.database && requestTimeout === dbConfig.requestTimeout) {
         if (!poolPromise) {
             const pool = new sql.ConnectionPool(dbConfig);
             poolPromise = pool.connect();
@@ -65,15 +66,18 @@ const getPool = async (databaseName, options = {}) => {
         return poolPromise;
     }
 
-    if (!databasePoolPromises.has(selectedDatabase)) {
+    // The driver sets request timeouts per pool; keep overrides separate from normal traffic.
+    const poolKey = JSON.stringify([selectedDatabase, requestTimeout]);
+    if (!databasePoolPromises.has(poolKey)) {
         const pool = new sql.ConnectionPool({
             ...dbConfig,
-            database: selectedDatabase
+            database: selectedDatabase,
+            requestTimeout
         });
-        databasePoolPromises.set(selectedDatabase, pool.connect());
+        databasePoolPromises.set(poolKey, pool.connect());
     }
 
-    return databasePoolPromises.get(selectedDatabase);
+    return databasePoolPromises.get(poolKey);
 };
 
 const bindRequestValues = (request, values) => {
@@ -195,8 +199,8 @@ rootClient.execute = async (strings, ...values) => {
     return createClient(() => pool.request()).execute(strings, ...values);
 };
 
-rootClient.queryUnsafe = async (statement) => {
-    const pool = await getPool();
+rootClient.queryUnsafe = async (statement, options = {}) => {
+    const pool = await getPool(null, options);
     return createClient(() => pool.request()).queryUnsafe(statement);
 };
 
@@ -255,8 +259,8 @@ rootClient.forDatabase = (databaseName) => {
             return createClient(() => pool.request()).execute(strings, ...values);
         },
 
-        async queryUnsafe(statement) {
-            const pool = await getPool(selectedDatabase);
+        async queryUnsafe(statement, options = {}) {
+            const pool = await getPool(selectedDatabase, options);
             return createClient(() => pool.request()).queryUnsafe(statement);
         },
 

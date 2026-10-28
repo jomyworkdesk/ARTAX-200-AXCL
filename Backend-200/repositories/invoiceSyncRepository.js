@@ -1,6 +1,10 @@
 const db = require("../db");
 const { sqlInt } = require("../utils/sqlCompatibility");
 const SYNC_BATCH_SIZE = 2;
+const configuredSourceTimeout = Number(process.env.INVOICE_SYNC_REQUEST_TIMEOUT);
+const SOURCE_REQUEST_TIMEOUT_MS = Number.isSafeInteger(configuredSourceTimeout) && configuredSourceTimeout > 0
+    ? configuredSourceTimeout
+    : 120000;
 const SPEC_IDENTIFIER = "urn:peppol:pint:billing-1@ae-1";
 const BUSINESS_PROCESS_TYPE = "urn:peppol:bis:billing";
 const VAT_TAX_SCHEME_CODE = "VAT";
@@ -172,7 +176,18 @@ const fetchInvoiceSourceRows = async (client = db, documents) => {
 
     if (!inClause || !docFilter) return [];
 
-    const sellerRows = await client.queryUnsafe(`
+    const querySourceRows = async (source, statement) => {
+        try {
+            return await client.queryUnsafe(statement, { requestTimeout: SOURCE_REQUEST_TIMEOUT_MS });
+        } catch (error) {
+            error.syncSourceQuery = source;
+            error.syncRequestTimeoutMs = SOURCE_REQUEST_TIMEOUT_MS;
+            error.message = `Failed to fetch ${source}: ${error.message}`;
+            throw error;
+        }
+    };
+
+    const sellerRows = await querySourceRows("seller details", `
         SELECT TOP (1)
             S.[ElectronicAddress] AS SellerElectronicAddress,
             EAS.VALUE AS SellerElectronicSchemeId,
@@ -203,7 +218,7 @@ const fetchInvoiceSourceRows = async (client = db, documents) => {
         ORDER BY E.idEntities DESC
     `);
 
-    const headerRows = await client.queryUnsafe(`
+    const headerRows = await querySourceRows("invoice headers", `
         SELECT
             YEAR(P.dPeriodDate) AS FinancialYear,
             CONVERT(varchar(10), DATEADD(MONTH, DATEDIFF(MONTH, 0, P.dPeriodDate), 0), 23) AS InvoicePeriodStart,
@@ -349,7 +364,7 @@ const fetchInvoiceSourceRows = async (client = db, documents) => {
         AND I.DocState = 4
     `);
 
-    const lineRows = await client.queryUnsafe(`
+    const lineRows = await querySourceRows("invoice lines", `
         SELECT
             I.InvNumber AS InvoiceNumber,
             I.AutoIndex AS ReferenceNumber,
@@ -386,7 +401,7 @@ const fetchInvoiceSourceRows = async (client = db, documents) => {
         AND CASE WHEN I.DocType = 1 THEN IL.ubIDCrnTxCMCharges ELSE IL.ubIDSOrdTxCMCharges END = 0
     `);
 
-    const chargeRows = await client.queryUnsafe(`
+    const chargeRows = await querySourceRows("document charges", `
         SELECT
             I.AutoIndex AS ReferenceNumber,
             1 AS HasDocumentCharges,
