@@ -214,7 +214,7 @@ const getUserDictLookupOptions = async (fieldDescription) => {
         }));
 };
 
-const getSchemeIdentifierOptions = async () => getUserDictLookupOptions("SchemeIdentifier");
+const getSchemeIdentifierOptions = async () => getUserDictLookupOptions("ulARSchemeIdentifier");
 
 const getBuyerDropdownOptions = async () => {
     const options = await getSellerDropdownOptions();
