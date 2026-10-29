@@ -24,7 +24,11 @@ const getConfig = () => {
             trustServerCertificate: toBoolean(process.env.DB_TRUST_CERT),
             // Temporary compatibility with SQL Server 2008 R2 RTM.
             cryptoCredentialsDetails: {
-                minVersion: "TLSv1"
+                minVersion: "TLSv1",
+                // Opt in to weaker legacy signatures only for older SQL Server instances.
+                ciphers: toBoolean(process.env.DB_LEGACY_TLS)
+                    ? "DEFAULT@SECLEVEL=0"
+                    : undefined
             }
         }
     };
