@@ -83,7 +83,6 @@ const getCharacterLimit = (column) => {
 
 const prepareTableValue = (tableName, column, value) => {
     if (value === null || value === undefined) return null;
-
     if (["binary", "varbinary", "image"].includes(column.dataType)) {
         if (Buffer.isBuffer(value)) return value;
         return Buffer.from(String(value), "base64");
