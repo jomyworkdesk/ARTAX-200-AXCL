@@ -550,7 +550,7 @@ const getCountryCodeLookup = async () =>
     db.query`
         SELECT TOP (1) [cLookupOptions]
         FROM [_rtblUserDict]
-        WHERE [cFieldName] = 'CountryCode'
+        WHERE [cFieldName] = 'ulARCountryCode'
     `;
 
 const getEMCountryCodes = async () =>
@@ -622,21 +622,21 @@ const getInvoiceTypeLookup = async () =>
     db.query`
         SELECT [cLookupOptions]
         FROM [_rtblUserDict]
-        WHERE [cFieldName] = 'InvoiceType'
+        WHERE [cFieldName] = 'ulIDSOrdInvoiceType'
     `;
 
 const getSchemeIdentifierLookup = async () =>
     db.query`
         SELECT TOP (1) [cLookupOptions]
         FROM [_rtblUserDict]
-        WHERE [cFieldName] = 'SchemeIdentifier'
+        WHERE [cFieldName] = 'ulARSchemeIdentifier'
     `;
 
 const getStandardSchemeLookup = async () =>
     db.query`
         SELECT TOP (1) [cLookupOptions]
         FROM [_rtblUserDict]
-        WHERE [cFieldName] = 'StandardScheme'
+        WHERE [cFieldName] = 'ulIIStandardScheme'
     `;
 
 const getEMElectronicAddressSchemes = async () =>
@@ -702,7 +702,7 @@ const getInvoiceTransactionTypeLookup = async () =>
     db.query`
         SELECT TOP (1) [cLookupOptions]
         FROM [_rtblUserDict]
-        WHERE [cFieldName] = 'InvoiceTransactionType'
+        WHERE [cFieldName] = 'ulIDSOrdInvoiceTransactionType'
     `;
 
 
@@ -739,21 +739,21 @@ const getCreditNoteReasonLookup = async () =>
     db.query`
         SELECT TOP (1) [cLookupOptions]
         FROM [_rtblUserDict]
-        WHERE [cFieldName] = 'CreditNoteReason'
+        WHERE [cFieldName] = 'ulIDCrnCreditNoteReason'
     `;
 
 const getRcmTypeLookup = async () =>
     db.query`
         SELECT TOP (1) [cLookupOptions]
         FROM [_rtblUserDict]
-        WHERE [cFieldName] = 'RcmType'
+        WHERE [cFieldName] = 'ulIDSOrdRcmType'
     `;
 
     const getExemptReasonLookup = async () =>
     db.query`
         SELECT TOP (1) [cLookupOptions]
         FROM [_rtblUserDict]
-        WHERE [cFieldName] = 'ExemptReason'
+        WHERE [cFieldName] = 'ulIDSOrdExemptReason'
     `;
 
 const getChargesReasonLookup = async () =>

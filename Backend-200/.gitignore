@@ -5,6 +5,5 @@ node_modules/
 *.log
 dist/
 build/
-Artax_ui/
 .pkg-cache/
 
