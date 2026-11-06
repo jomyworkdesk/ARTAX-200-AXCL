@@ -287,7 +287,8 @@ const insertLogEntry = async (level, message, data = {}, requestContext = {}) =>
             [UserName],
             [SessionId],
             [IPAddress],
-            [UserAgent]
+            [UserAgent],
+            [CreatedDate]
         )
         VALUES
         (
@@ -302,7 +303,8 @@ const insertLogEntry = async (level, message, data = {}, requestContext = {}) =>
             ${metadata.UserName},
             ${metadata.SessionId},
             ${metadata.IPAddress},
-            ${metadata.UserAgent}
+            ${metadata.UserAgent},
+            GETDATE()
         )
     `;
 };
