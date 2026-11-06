@@ -276,6 +276,7 @@ const insertLogEntry = async (level, message, data = {}, requestContext = {}) =>
     await db.execute`
         INSERT INTO [dbo].[E_AppLogger]
         (
+            [LogDateTime],
             [Level],
             [Message],
             [Data],
@@ -292,6 +293,7 @@ const insertLogEntry = async (level, message, data = {}, requestContext = {}) =>
         )
         VALUES
         (
+            GETDATE(),
             ${level},
             ${message},
             ${serializeData(data)},

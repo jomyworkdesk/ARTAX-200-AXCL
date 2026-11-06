@@ -2079,6 +2079,7 @@ const Configure = () => {
         </div>
 
         {/* TDD SCOPE MASTER TABLE */}
+       {/*
         <div className="configure-card">
           <div className="card-header">
             <h2>TDD Scope Master</h2>
@@ -2151,6 +2152,7 @@ const Configure = () => {
             </div>
           )}
         </div>
+        */}
 
         {/* RCM TYPE MASTER TABLE */}
         <div className="configure-card">
