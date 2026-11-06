@@ -15,19 +15,22 @@ const buildSqlStringList = (values) =>
         .map((value) => `'${String(value).replace(/'/g, "''")}'`)
         .join(",");
 
-// Field names are internal constants; aggregate to keep one UDF row per invoice.
+// Field names are internal constants; use dictionary defaults when history has no value.
 const buildInvoiceUdfApply = (fields) => {
     const columns = fields
-        .map((field) => `MAX(CASE WHEN UD.[cFieldName] = '${field}' THEN CONVERT(nvarchar(max), UH.[UserValue]) END) AS [${field}]`)
+        .map((field) => `COALESCE(
+                    MAX(CASE WHEN UD.[cFieldName] = '${field}' THEN CONVERT(nvarchar(max), UH.[UserValue]) END),
+                    MAX(CASE WHEN UD.[cFieldName] = '${field}' THEN CONVERT(nvarchar(max), UD.[cDefaultValue]) END)
+                ) AS [${field}]`)
         .join(",\n                ");
 
     return `OUTER APPLY (
             SELECT
                 ${columns}
-            FROM [_etblUserHistLink] UH
-            INNER JOIN [_rtblUserDict] UD ON UH.[UserDictID] = UD.[idUserDict]
-            WHERE UH.[TableID] = I.AutoIndex
-              AND UD.[cFieldName] IN (${buildSqlStringList(fields)})
+            FROM [_rtblUserDict] UD
+            LEFT JOIN [_etblUserHistLink] UH ON UH.[UserDictID] = UD.[idUserDict]
+              AND UH.[TableID] = I.AutoIndex
+            WHERE UD.[cFieldName] IN (${buildSqlStringList(fields)})
         ) UDF`;
 };
 
